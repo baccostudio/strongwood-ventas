@@ -5,7 +5,8 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { toast } from 'react-toastify';
 import { submitContact } from "@/app/actions";
 import { useRef, useState } from "react";
-import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
+import { contactContent, turnstileConfig } from "@/content/contact";
+import { ContactTurnstile } from "./ContactTurnstile";
 
 // 1. Define la estructura de los datos del formulario
 interface FormData {
@@ -38,45 +39,40 @@ const TestimonialForm = () => {
     } = useForm<FormData>({ resolver: yupResolver(schema) });
 
     const form = useRef<HTMLFormElement>(null);
-    const { executeRecaptcha } = useGoogleReCaptcha();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [turnstileToken, setTurnstileToken] = useState("");
+    const [challengeVersion, setChallengeVersion] = useState(0);
+    const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() ?? "";
 
     const sendEmail = async () => {
         if (!form.current) return console.error("Form reference is null");
+        if (isSubmitting) return;
+        if (!turnstileSiteKey || !turnstileToken) {
+            toast.error(contactContent.protection.required, { position: "top-center" });
+            return;
+        }
 
         try {
             setIsSubmitting(true);
 
-            // 1) Obtener token v3 por acción
-            const action = "contact_submit";
-            if (!executeRecaptcha) {
-                console.warn("reCAPTCHA aún no cargó");
-            } else {
-                const token = await executeRecaptcha(action);
-                const tokenInput = form.current.querySelector<HTMLInputElement>('input[name="g-recaptcha-token"]');
-                const actionInput = form.current.querySelector<HTMLInputElement>('input[name="g-recaptcha-action"]');
-                if (tokenInput) tokenInput.value = token ?? "";
-                if (actionInput) actionInput.value = action;
-            }
-
-            // 2) Llamar Server Action
             const fd = new FormData(form.current);
+            fd.set(turnstileConfig.tokenFieldName, turnstileToken);
             const result = (await submitContact(fd)) as { ok: boolean; error?: string; };
 
             if (result?.ok) {
                 toast.success("¡Consulta recibida! Nos pondremos en contacto pronto.", { position: "top-center" });
-                // Limpio campos visibles y también ocultos
                 reset();
-                const tokenInput = form.current.querySelector<HTMLInputElement>('input[name="g-recaptcha-token"]');
-                if (tokenInput) tokenInput.value = "";
             } else {
                 toast.error(result?.error || "No se pudo enviar el mensaje", {
                     position: "top-center",
                 });
             }
-        } catch (e) {
-            console.log(e)
+        } catch {
+            toast.error(contactContent.sendError, { position: "top-center" });
         } finally {
+            // Turnstile tokens are single-use, including failed submissions.
+            setTurnstileToken("");
+            setChallengeVersion((version) => version + 1);
             setIsSubmitting(false);
         }
     };
@@ -84,9 +80,10 @@ const TestimonialForm = () => {
     return (
         // 5. Conecta handleSubmit al evento onSubmit del formulario
         <form ref={form} onSubmit={handleSubmit(sendEmail)}>
-            {/* Hidden reCAPTCHA v3 */}
-            <input type="hidden" name="g-recaptcha-token" />
-            <input type="hidden" name="g-recaptcha-action" value="contact_submit" />
+            <div hidden aria-hidden="true">
+                <label htmlFor="contact-website">{contactContent.honeypotLabel}</label>
+                <input id="contact-website" type="text" name="website" tabIndex={-1} autoComplete="off" />
+            </div>
 
             <div className="row">
                 {/* --- Nombre Completo --- */}
@@ -168,8 +165,13 @@ const TestimonialForm = () => {
 
                 {/* --- Botón de Envío --- */}
                 <div className="col-12">
+                    <ContactTurnstile
+                        key={challengeVersion}
+                        siteKey={turnstileSiteKey}
+                        onTokenChange={setTurnstileToken}
+                    />
                     <div className="testimonials_btn text-center">
-                        <button type="submit" className="primary-btn-4 btn-hover btn-hover-2" disabled={isSubmitting}>
+                        <button type="submit" className="primary-btn-4 btn-hover btn-hover-2" disabled={isSubmitting || !turnstileSiteKey || !turnstileToken}>
                             {isSubmitting ? "ENVIANDO.." : "ENVIAR CONSULTA"}
                             <span style={{ top: "147.172px", left: "108.5px" }}></span>
                         </button>

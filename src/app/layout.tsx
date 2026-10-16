@@ -5,12 +5,13 @@ import 'react-toastify/dist/ReactToastify.css';
 import Script from "next/script";
 import Providers from "./providers";
 import WhatsAppButton from "../components/common/WhatsAppButton";
+import { siteConfig } from "@/content/site";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const roboto = Roboto({ weight: ["300", "400", "500", "700"], subsets: ["latin"], variable: "--font-roboto" });
 
 export const metadata = {
-  // metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(siteConfig.url),
   title: "Strong Wood",
   description: "metal roofing, industrial roofing, construction, exterior, maintenance, painting, remodelling, renovation, repair service, roof repair, roofers, roofing, roofing company, roofing service, siding websites",
   keywords: ["Strong Wood", "Muebles para Proyectos Inmobiliarios"],
@@ -32,7 +33,7 @@ export default function RootLayout({
   const isDev = process.env.NODE_ENV === 'development'
 
   return (
-    <html lang="en" suppressHydrationWarning={isDev}>
+    <html lang="es-AR" suppressHydrationWarning={isDev}>
       {/* <head> */}
       {/* <meta name="keywords" content="Strong Wood - Muebles para Proyectos Inmobiliarios" />
         <meta name="description" content="metal roofing, industrial roofing, construction, exterior, maintenance, painting, remodelling, renovation, repair service, roof repair, roofers, roofing, roofing company, roofing service, siding websites" /> */}

@@ -1,0 +1,48 @@
+name: strongwood-ventas
+
+services:
+  strongwood_ventas:
+    image: strongwood-ventas:latest
+    container_name: strongwood_ventas_next
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SITE_URL: ${SITE_URL:?Set the canonical HTTPS origin in .env}
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:?Set the public Turnstile site key before building}
+    # Explicit variables keep Compose settings out of the application environment.
+    # Empty credentials allow an image build; the contact action fails closed.
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: "3000"
+      SITE_URL: ${SITE_URL:?Set the canonical HTTPS origin in .env}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
+      TURNSTILE_ALLOWED_HOSTNAMES: ${TURNSTILE_ALLOWED_HOSTNAMES:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_SECURE: ${SMTP_SECURE:-true}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_TO: ${SMTP_TO:-}
+    ports:
+      - "127.0.0.1:${HOST_PORT:?Set HOST_PORT only after checking it is free on the VPS}:3000"
+    volumes:
+      - image_cache:/app/.next/cache/images
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  image_cache:
+    name: strongwood-ventas-image-cache

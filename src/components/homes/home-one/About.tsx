@@ -46,10 +46,10 @@ const About = ({ style }: PropType) => {
                <div className="col-xxl-6 col-xl-6 col-lg-6 col-md-12">
                   <div className="about-2-image-area p-relative wow fadeInLeft" data-wow-delay="500ms">
                      <figure className="main-image m-img">
-                        <Image src={about_1} alt="" />
+                        <Image src={about_1} alt="" sizes="(min-width: 1200px) 555px, (min-width: 992px) 50vw, 100vw" />
                      </figure>
                      <div className="small-image">
-                        <Image src={about_2} alt="" />
+                        <Image src={about_2} alt="" sizes="239px" />
                      </div>
                      <div className="shape-1" style={{ backgroundImage: `url(/assets/imgs/shapes/shape-29.png)` }}></div>
                   </div>

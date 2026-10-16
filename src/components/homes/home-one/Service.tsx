@@ -126,7 +126,7 @@ const Service = ({ style }: PropType) => {
                                         <div className="service-tab-content p-relative">
                                             {!style && <div className="tab-bg-shape" style={{ backgroundImage: `url(/assets/imgs/shapes/shape-32.png)` }}></div>}
                                             <figure className="image p-relative">
-                                                <Image src={item.thumb} alt={item.title} />
+                                                <Image src={item.thumb} alt={item.title} sizes="(max-width: 767px) 100vw, 330px" />
                                             </figure>
                                             <div className="content p-relative">
                                                 <h4>{item.title}</h4>
